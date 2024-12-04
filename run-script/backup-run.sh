@@ -747,14 +747,22 @@ EOF
 
 if [[ $yringress = "Yes" ]]
 then
-  echo "What is your ingress namespace?"
+	echo "What is your ingress class name(ex> ingress-sec)?"
   read ingressname
-  echo "What is your ako labels?"
+  echo "What is your ako labels(ex> avi: primary)?"
   read akolabels
   sed -i'' -r -e "/labels:/a\    ${akolabels}" ./00-common.yaml
   sed -i'' -r -e "/type: LoadBalancer/a\  loadBalancerClass: ako.vmware.com/avi-lb" ./02-service-envoy.yaml
   sed -i'' -r -e "/config-path/a\        - --ingress-class-name=${ingressname}" ./03-contour.yaml
   sed -i "s/hostPort:/#hostPort:/" ./03-envoy.yaml
+cat > 04-ingressclass.yaml << EOF
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: ${ingressname}
+spec:
+  controller: projectcontour.io/ingress-controller
+EOF
 else
   echo ""
   echo ""
